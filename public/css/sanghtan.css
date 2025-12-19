@@ -1,0 +1,237 @@
+:root {
+    --card-w: 120px;
+    --gap: 12px;
+}
+
+* {
+    box-sizing: border-box;
+}
+body, html {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    width: 100%;
+}
+
+body {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    background: #faf7f749;
+    margin: 0;
+    color: #111;
+}
+
+.tree-chart {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 10px;
+    text-align: center;
+}
+
+.group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.leaf {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    border: 2px solid #0c0b0b;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 6px 0;
+    background: #fff;
+    text-align: center;
+    word-wrap: break-word;
+}
+
+.leaf .title {
+    font-weight: 800;
+    font-size: 12px;
+    padding: 4px 6px;
+}
+.desc{
+    font-weight: bolder;
+}
+.leaf .desc,
+.leaf .extra {
+    font-size: 11px;
+    padding: 4px 6px;
+    color: #222;
+}
+
+.leaf .extra {
+    background: #f9f9f9;
+    color: #333;
+}
+
+.leaf.yellow .title {
+    background: #f0dd39;
+    color: #7a5900;
+}
+
+.leaf.red .title {
+    background: #f16e6e;
+    color: #fff;
+}
+
+.leaf.green .title {
+    background: #1287ad;
+    color: #edf0f1;
+}
+
+.arrow-img {
+    width: 40px;
+    height: auto;
+    margin: 10px auto;
+}
+
+.horizontal-line {
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(to right, #0e161b, #0e1312, #0e0c06);
+    border-radius: 2px;
+    margin: 20px 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.centered {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.centered h3,
+.centered h4 {
+    margin: 4px 0;
+}
+
+/* ---------------- Horizontal Branches (7 columns) ---------------- */
+.horizontal-branches {
+    display: grid;
+    grid-template-columns: repeat(7, var(--card-w));
+    gap: var(--gap);
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.leaf {
+    width: var(--card-w);
+    margin: 6px 0;
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 1200px) {
+    :root { --card-w: 110px; --gap: 10px; }
+    .horizontal-branches { grid-template-columns: repeat(7, 1fr); gap: 50px; }
+}
+
+@media (max-width: 992px) {
+    :root { --card-w: 100px; --gap: 8px; }
+    .horizontal-branches { grid-template-columns: repeat(7, 1fr); gap: 50px; }
+    .leaf { width: 100%; max-width: 100px; }
+}
+
+@media (max-width: 768px) {
+    .horizontal-branches {
+        grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .horizontal-branches {
+        grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    }
+    .leaf { font-size: 10px; padding: 4px 2px; }
+}
+
+/* Default font sizes */
+.leaf .title { font-size: 12px; }
+.leaf .desc, .leaf .extra { font-size: 11px; }
+
+/* Tablets */
+@media (max-width: 768px) {
+    .leaf .title { font-size: 11px; }
+    .leaf .desc, .leaf .extra { font-size: 10px; }
+}
+
+/* Small mobiles */
+@media (max-width: 480px) {
+    .leaf .title { font-size: 10px; }
+    .leaf .desc, .leaf .extra { font-size: 9px; }
+}
+
+@media (max-width: 768px) {
+    :root { --card-w: 90px; --gap: 6px; }
+    .horizontal-branches { grid-template-columns: repeat(7, 1fr); gap: 50px; }
+    .leaf { max-width: 90px; }
+}
+
+@media (max-width: 480px) {
+    :root { --card-w: 70px; --gap: 4px; }
+    .horizontal-branches { grid-template-columns: repeat(7, 1fr); gap: 54px; }
+    .leaf { max-width: 70px; font-size: 10px; padding: 4px 2px; }
+    .arrow-img { width: 25px; margin: 8px auto; }
+}
+
+/* =========================================================
+   FINAL OVERRIDES — ADDED ONLY (nothing removed above)
+   ========================================================= */
+
+/* Use full screen width */
+.tree-chart {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+}
+
+/* Distribute columns evenly on large screens */
+.horizontal-branches {
+    width: 100% !important;
+    justify-content: stretch !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    gap: clamp(16px, 2.5vw, 40px) !important;
+}
+
+/* Ensure cards fill grid cells */
+.horizontal-branches .leaf {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Extra spacing on very large screens */
+@media (min-width: 1600px) {
+    .horizontal-branches {
+        gap: clamp(24px, 3vw, 56px) !important;
+    }
+}
+
+/* Tablet refinement */
+@media (max-width: 992px) {
+    .horizontal-branches {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+
+/* Small tablets */
+@media (max-width: 768px) {
+    .horizontal-branches {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+/* Mobiles */
+@media (max-width: 480px) {
+    .horizontal-branches {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: clamp(12px, 4vw, 24px) !important;
+    }
+}
