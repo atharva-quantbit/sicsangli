@@ -12,7 +12,7 @@ body.no-scroll {
 /* Pani Vapar Specific Styles */
 .title-heading {
     text-align: center;
-    color: red;
+    color: rgb(14, 10, 10);
     font-weight: bold;
     font-size: 1.8em;
     margin: 40px 0 20px 0;
@@ -53,8 +53,8 @@ th, td {
     word-break: break-word;
 }
 th {
-    background-color: #f2a198;
-    color: rgb(14, 11, 11);
+    background-color: #6baceb;
+    color: rgb(255 252 252);
     font-weight: bold;
     position: sticky;
     top: 0;
