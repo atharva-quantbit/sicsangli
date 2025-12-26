@@ -6,7 +6,7 @@ from googleapiclient.discovery import build
 from frappe import _
 
 SPREADSHEET_ID = "1uZMDUujtlQr_G5E720P0upyQJ2Pfwiu_m8DIorZZyvA"
-SERVICE_ACCOUNT_FILE = "/home/erpadmin/webpage-bench/apps/sicsangli/sicsangli/public/js/credentials.json"
+SERVICE_ACCOUNT_FILE = "/home/erpadmin/webpage-bench/apps/sicsangli/sicsangli/public/js/api_tokens.json"
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
 # Set up logging

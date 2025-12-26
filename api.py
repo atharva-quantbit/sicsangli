@@ -5,7 +5,7 @@ from googleapiclient.discovery import build
 
 SPREADSHEET_ID = "1uZMDUujtlQr_G5E720P0upyQJ2Pfwiu_m8DIorZZyvA"
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-SERVICE_ACCOUNT_FILE = "/home/erpadmin/webpage-bench/apps/sicsangli/sicsangli/public/js/credentials.json"
+SERVICE_ACCOUNT_FILE = "/home/erpadmin/webpage-bench/apps/sicsangli/sicsangli/public/js/api_tokens.json"
 
 def clean_display(s):
     return str(s).strip().replace('\u200B', '')
