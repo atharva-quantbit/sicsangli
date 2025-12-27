@@ -4996,3 +4996,9 @@ select:visited {
     background-size: cover;      /* optional, but common */
     background-position: center; /* optional */
 }
+.page-arfal .breadcrumb-section .background_overlay {
+    background-image: url(../img/water-level/Arfal.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;      /* optional, but common */
+    background-position: center; /* optional */
+}

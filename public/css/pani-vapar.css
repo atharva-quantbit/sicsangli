@@ -49,8 +49,9 @@ th, td {
     padding: 12px;
     text-align: center;
     vertical-align: top;
-    overflow-wrap: break-word;
-    word-break: break-word;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: normal;
 }
 th {
     background-color: #6baceb;

@@ -6,7 +6,8 @@ from google.oauth2.service_account import Credentials
 # Google Sheets Configuration
 SPREADSHEET_ID = "1uZMDUujtlQr_G5E720P0upyQJ2Pfwiu_m8DIorZZyvA"
 SHEET_NAME = "Pani Vapar 2"
-SERVICE_ACCOUNT_FILE = "/home/erpadmin/webpage-bench/apps/sicsangli/sicsangli/public/js/api_tokens.json"
+SERVICE_ACCOUNT_FILE = "/home/erpadmin/webpage-bench/sites/credentials/google_sheets.json"
+
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
 

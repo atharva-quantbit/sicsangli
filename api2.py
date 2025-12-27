@@ -1,3 +1,5 @@
+
+
 import frappe
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
@@ -5,10 +7,10 @@ import copy
 
 SPREADSHEET_ID = "1uZMDUujtlQr_G5E720P0upyQJ2Pfwiu_m8DIorZZyvA"
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-SERVICE_ACCOUNT_FILE = "/home/erpadmin/webpage-bench/apps/sicsangli/sicsangli/public/js/api_tokens.json"
+SERVICE_ACCOUNT_FILE = "/home/erpadmin/webpage-bench/sites/credentials/google_sheets.json"
+
 SHEET_NAME = "sheet3"
 
-# Specific headers for which charts should be created (indices 0-5 correspond to first 6 data columns)
 CHART_HEADERS = [
     "सर्वोच्च न्यायालय",
     "उच्च न्यायालय",
@@ -23,7 +25,6 @@ def is_kpi_color(cell):
     red = bg.get('red', 0)
     green = bg.get('green', 0)
     blue = bg.get('blue', 1)
-    # #fce5cd: red≈0.988, green≈0.898, blue≈0.804
     return abs(red - 0.988) < 0.05 and abs(green - 0.898) < 0.05 and abs(blue - 0.804) < 0.05
 
 def is_chart_color(cell):
@@ -31,7 +32,6 @@ def is_chart_color(cell):
     red = bg.get('red', 0)
     green = bg.get('green', 0)
     blue = bg.get('blue', 1)
-    # #c9daf8: red≈0.788, green≈0.855, blue≈0.973
     return abs(red - 0.788) < 0.05 and abs(green - 0.855) < 0.05 and abs(blue - 0.973) < 0.05
 
 def is_green_color(cell):
@@ -39,7 +39,6 @@ def is_green_color(cell):
     red = bg.get('red', 0)
     green = bg.get('green', 0)
     blue = bg.get('blue', 1)
-    # #93c47d: red≈0.576, green≈0.769, blue≈0.490
     return abs(red - 0.576) < 0.05 and abs(green - 0.769) < 0.05 and abs(blue - 0.490) < 0.05
 
 def is_yellow_cell(cell):
@@ -76,7 +75,6 @@ def get_headers_with_type(row):
             elif is_green_color(cell):
                 header_type = 'both'
             
-            # Force 'chart' type if header name matches one of the specified court headers
             if name in CHART_HEADERS:
                 header_type = 'chart' if header_type != 'kpi' else 'both'
             
@@ -138,7 +136,6 @@ def filter_empty_columns(headers_with_type, data_rows):
             valid_col_indices.append((col_info, col_index))
     
     filtered_headers = [col[0] for col in valid_col_indices]
-    # Filter rows to only include valid columns
     filtered_rows = []
     for row in data_rows:
         filtered_row = [row[0], row[1]] if len(row) > 1 else [row[0]]  # Keep serial and label
@@ -146,9 +143,7 @@ def filter_empty_columns(headers_with_type, data_rows):
             filtered_row.append(row[col_index] if len(row) > col_index else {'value': ''})
         filtered_rows.append(filtered_row)
     
-    # Filter totals similarly if present
     filtered_totals = None
-    # Assuming totals is processed similarly, but for now, return as is or filter if needed
     
     return filtered_headers, filtered_rows
 
@@ -156,8 +151,7 @@ def calculate_kpis(header_types, rows):
     kpis = []
     if not header_types or not rows:
         return kpis
-    # No need to filter again as data_rows are already non-yellow
-    label_index = 1 # Assume second column is labels
+    label_index = 1 
     for col_info in header_types:
         col_index = col_info['col_index']
         if col_info['type'] in ['kpi', 'both']:
@@ -173,7 +167,7 @@ def calculate_kpis(header_types, rows):
                             except ValueError:
                                 pass
             total_sum = sum(col_values)
-            if col_values: # Append if there were values considered, even if sum is 0
+            if col_values: 
                 kpis.append({'label': col_info['name'], 'value': round(total_sum, 2)})
     return kpis
 
@@ -181,12 +175,10 @@ def prepare_charts(header_types, rows):
     charts = []
     if not header_types or not rows:
         return charts
-    # No need to filter again as data_rows are already non-yellow
     label_index = 1
     chart_types = ['bar', 'pie', 'doughnut']
     for i, col_info in enumerate(header_types):
         col_index = col_info['col_index']
-        # Create chart if type is 'chart' or 'both', or if header is in CHART_HEADERS
         if col_info['type'] in ['chart', 'both'] or col_info['name'] in CHART_HEADERS:
             labels = []
             data = []
@@ -222,46 +214,38 @@ def run_test_py_demo():
         tables = []
         i = 0
         while i < len(sheet_data):
-            # Find bold row for headers
             while i < len(sheet_data) and not has_bold_row(sheet_data[i]):
                 i += 1
             if i >= len(sheet_data):
                 break
-            # Extract headers with type
             headers_with_type = get_headers_with_type(sheet_data[i])
             headers = [h['name'] for h in headers_with_type]
             header_index = i
             frappe.log(f"Header row at {i}: {headers}")
             i = header_index + 1
-            # Look back for title: find the nearest non-empty row above the header
             title = 'Untitled Table'
             for j in range(header_index - 1, -1, -1):
                 if not is_empty_row(sheet_data[j]):
                     title = get_title(sheet_data[j])
                     frappe.log(f"Title found at row {j}: {title}")
                     break
-            # Extract data rows until next bold or yellow
             data_rows = []
             while i < len(sheet_data):
                 if has_bold_row(sheet_data[i]) or is_yellow_row(sheet_data[i]):
                     break
                 full_row = get_full_row_data(sheet_data[i])
                 row_is_yellow = any(is_yellow_cell({'userEnteredFormat': {'backgroundColor': item['bg']}}) for item in full_row)
-                # Ignore if row is yellow or first column (index 0) is empty
                 first_cell_empty = len(full_row) > 0 and not full_row[0]['value'].strip()
                 if not row_is_yellow and not first_cell_empty and any(item['value'].strip() for item in full_row):
                     data_rows.append(full_row)
                 i += 1
-            # Capture yellow totals row if present
             totals = None
             if i < len(sheet_data) and is_yellow_row(sheet_data[i]):
                 totals = get_full_row_data(sheet_data[i])
                 i += 1
             
-            # Filter empty columns
             filtered_headers_with_type, filtered_data_rows = filter_empty_columns(headers_with_type, data_rows)
             filtered_headers = [h['name'] for h in filtered_headers_with_type]
-            # Filter totals to match filtered columns
             if totals:
                 filtered_totals = [totals[0], totals[1]] if len(totals) > 1 else [totals[0]]
                 for h in filtered_headers_with_type:
@@ -270,7 +254,6 @@ def run_test_py_demo():
             else:
                 filtered_totals = None
             
-            # Calculate KPIs and charts using filtered data
             kpis = calculate_kpis(filtered_headers_with_type, filtered_data_rows)
             charts = prepare_charts(filtered_headers_with_type, filtered_data_rows)
             table = {

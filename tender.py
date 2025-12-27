@@ -1,94 +1,82 @@
-import json
 import frappe
 import logging
+from functools import lru_cache
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
-from frappe import _
 
 SPREADSHEET_ID = "1uZMDUujtlQr_G5E720P0upyQJ2Pfwiu_m8DIorZZyvA"
 SHEET_NAME = "Tender"
-SERVICE_ACCOUNT_FILE = "/home/erpadmin/webpage-bench/apps/sicsangli/sicsangli/public/js/api_tokens.json"
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+SERVICE_ACCOUNT_FILE = "/home/erpadmin/webpage-bench/sites/credentials/google_sheets.json"
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+SCOPES = ("https://www.googleapis.com/auth/spreadsheets.readonly",)
+
+MAX_ROWS = 50
+MAX_COLS = 26
+
 logger = logging.getLogger(__name__)
+
+@lru_cache(maxsize=1)
+def get_sheets_service():
+    creds = Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE,
+        scopes=SCOPES
+    )
+    return build("sheets", "v4", credentials=creds, cache_discovery=False)
+
+def pad_row(row, length):
+    row = row or []
+    return row[:length] if len(row) >= length else row + [''] * (length - len(row))
 
 def fetch_sheet_data():
     try:
-        logger.info("Starting fetch_sheet_data: Loading credentials...")
-        credentials = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-        service = build('sheets', 'v4', credentials=credentials)
-        logger.info("Google Sheets service built.")
-
-        MAX_ROWS = 50
+        service = get_sheets_service()
         range_name = f"{SHEET_NAME}!A1:Z{MAX_ROWS}"
-        logger.info(f"Fetching range: {range_name}")
 
         result = service.spreadsheets().values().get(
             spreadsheetId=SPREADSHEET_ID,
-            range=range_name
+            range=range_name,
+            valueRenderOption="FORMATTED_VALUE"
         ).execute()
 
-        values = result.get('values', [])
-        logger.info(f"Raw values fetched: {len(values)} rows")
+        values = result.get("values", [])
+        if not values:
+            return {
+                "success": True,
+                "headers": [],
+                "rows": [],
+                "total_rows": 0,
+                "total_columns": 0
+            }
 
-        # Pad to 26 columns
-        MAX_COLS = 26
-        for row in values:
-            row.extend([''] * (MAX_COLS - len(row)))
+        headers = pad_row(values[0], MAX_COLS)
 
-        # Pad to 50 rows
-        while len(values) < MAX_ROWS:
-            values.append([''] * MAX_COLS)
+        data_rows = []
+        for row in values[1:]:
+            if any(str(cell).strip() for cell in row):
+                data_rows.append(pad_row(row, MAX_COLS))
 
-        headers = values[0] if values else [''] * MAX_COLS
-        raw_data_rows = values[1:] if len(values) > 1 else []
-        data_rows = [row for row in raw_data_rows if any(cell.strip() for cell in row)]
-
-        sheet_json = {
-            'success': True,
-            'headers': headers,
-            'rows': data_rows,
-            'total_rows': len(data_rows),
-            'total_columns': len(headers)
+        return {
+            "success": True,
+            "headers": headers,
+            "rows": data_rows,
+            "total_rows": len(data_rows),
+            "total_columns": len(headers)
         }
-        logger.info(f"Success: {len(data_rows)} filtered rows, {len(headers)} columns")
-        return sheet_json
 
     except Exception as e:
-        logger.error(f"fetch_sheet_data failed: {str(e)}", exc_info=True)
-        return {'success': False, 'error': str(e)}
-
+        logger.exception("fetch_sheet_data failed")
+        return {"success": False, "error": str(e)}
 
 @frappe.whitelist(allow_guest=True)
 def get_tender_json():
-    """
-    Returns RAW JSON with correct headers.
-    Fixes 417, 500, and UI error display.
-    """
-    try:
-        data = fetch_sheet_data()
+    data = fetch_sheet_data()
 
-        # FORCE RAW JSON RESPONSE
-        frappe.response['data'] = data
-        frappe.response['type'] = 'json'  # Critical!
-        frappe.response['http_status_code'] = 200
+    frappe.response["data"] = data
+    frappe.response["type"] = "json"
+    frappe.response["http_status_code"] = 200
+    frappe.local.response.headers = {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"
+    }
 
-        # Optional: Set headers to prevent 417
-        frappe.local.response.headers = {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
-        }
-
-        return data  # This will be serialized safely
-
-    except Exception as e:
-        logger.error(f"get_tender_json error: {str(e)}", exc_info=True)
-        error_response = {'success': False, 'error': str(e)}
-        
-        frappe.response['data'] = error_response
-        frappe.response['type'] = 'json'
-        frappe.response['http_status_code'] = 200  # Never 500
-
-        return error_response
+    return data
